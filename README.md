@@ -1,5 +1,7 @@
 # Liquid lens
 
+![The effect: one shape with a ragged coastline, the photograph drawn only inside it, out of focus at the edges](docs/preview.jpg)
+
 A photograph, and a body of liquid you move over it with the pointer. Seven
 soft bodies chase your hand; where two are near each other their fields add,
 so the outline around them is one closed curve with a waist rather than two
@@ -125,7 +127,9 @@ readable at all. Paste any image URL from a host that does the same. If it
 draws nothing, that header is why.
 
 Photographs in the demo by Kalen Emsley, Sergey Pesterev, Casey Horner,
-Pedro Lastra and Ayo Ogunseinde, on Unsplash.
+Pedro Lastra and Ayo Ogunseinde, on Unsplash. The image at the top of this
+file is the shader's own output over Kalen Emsley's photograph, not a mockup:
+it was rendered by the same fragment shader this repository ships.
 
 ## Running it
 
