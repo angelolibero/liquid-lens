@@ -1,0 +1,21 @@
+<!doctype html>
+<!-- NO `dark` CLASS: the page opens light, and the switch in the corner adds
+     the class when somebody asks for the other one. shadcn writes the light
+     tokens on :root and the dark ones under .dark, so bare markup is already
+     the light theme and there is nothing to undo on the first paint. -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Liquid lens</title>
+    <meta
+      name="description"
+      content="A WebGL metaball lens: soft bodies that chase the pointer, merge into one shape, and show a photograph only where they are."
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
