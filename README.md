@@ -51,7 +51,9 @@ below and falls back to the defaults for the rest. `paper` is the colour
 `Room light` mixes toward, and should be the page's own ground.
 `follow={false}` stops it chasing the pointer and leaves it drifting, which is
 what a lens much smaller than the window wants (the demo's logo is one).
-`KNOBS`, `DEFAULTS` and `PRESETS` are exported, so a panel of your own can be
+A ref gives `ripple(x?, y?, strength?)`, to send a ring from code: one on
+arrival, or when a heading is hovered, shows a hero can be touched before
+anybody has pressed it. `KNOBS`, `DEFAULTS` and `PRESETS` are exported, so a panel of your own can be
 built from the same table the demo's is. See the [API](docs/API.md) and the
 [architecture](docs/ARCHITECTURE.md).
 
@@ -72,6 +74,19 @@ The demo's `Copy config` writes a ready component with the tuning you landed on.
 | Coast wander | How far noise pushes the boundary around. This is what makes the edge a coastline instead of an arc. |
 | Coast grain | How fine that wander is. |
 | Room light | How much of the page's own paper is laid over the photograph. |
+
+And four for what a press does. A click or a tap sends one ring out from where
+it landed: it bends the picture under it the way a wave bends what is under
+water, and lifts the shore as it crosses it. Touch counts here, so this is how
+a phone gets to touch the lens at all. Presses on links, buttons and fields
+are left to them, and reduced motion turns rings off.
+
+| Knob | What it does |
+| --- | --- |
+| Ripple strength | How hard a press bends the picture and lifts the shore. 0 turns presses off. |
+| Ripple speed | How fast the ring travels, in light radii per second. |
+| Ripple width | A fine ripple at the low end, a swell at the high end. |
+| Ripple life | How long a ring keeps its height, in seconds. |
 
 And seven for what it does when nobody is pointing at it, behind a switch that
 turns the lot off at once:
@@ -144,8 +159,9 @@ None are committed. The demo hotlinks Unsplash's CDN, which sends
 readable at all. Paste any image URL from a host that does the same. If it
 draws nothing, that header is why.
 
-Photographs in the demo by Kalen Emsley, Sergey Pesterev, Casey Horner,
-Pedro Lastra and Ayo Ogunseinde, on Unsplash. The cover at the top of this
+Pictures in the demo, all on Unsplash: abstracts by Pawel Czerwinski, Emily
+Bernal, vackground.com, Solen Feyissa and Milad Fakurian; photographs by Kalen
+Emsley, Sergey Pesterev, Casey Horner, Pedro Lastra and Ayo Ogunseinde. The cover at the top of this
 file is not a mockup: it is `demo/cover.html`, a page that draws the real
 component over Kalen Emsley's photograph, captured at twice its size. Run
 `npm run demo`, open `/liquid-lens/cover.html`, and it is there.

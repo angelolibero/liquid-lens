@@ -263,7 +263,9 @@
 * { border-color: var(--border); }
 html { font-family: Figtree, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 body { margin: 0; background: var(--background); color: var(--foreground); }
-button, input { font: inherit; }
+/* Not the segmented options: their type is a utility and a layered rule, and
+   an unlayered reset here would beat both. */
+button:not(.segmented-option), input { font: inherit; }
 
 /* ═══ THE SHELL ════════════════════════════════════════════════════════════
    The reference's own rules, by its class names, so a fix in one is a
@@ -354,6 +356,290 @@ button, input { font: inherit; }
 .house-slider input::-webkit-slider-thumb { box-sizing: border-box; width: 18px; height: 18px; margin-top: 2px; border: 3px solid var(--thumb-ring); border-radius: 50%; background: color-mix(in oklab, var(--card) 40%, transparent); box-shadow: var(--thumb-shadow); backdrop-filter: blur(2px) saturate(1.08); -webkit-backdrop-filter: blur(2px) saturate(1.08); appearance: none; -webkit-appearance: none; transform: translateX(var(--slider-pull-x)); transition: transform 80ms cubic-bezier(0.22, 1, 0.36, 1); }
 .house-slider input::-moz-range-thumb { box-sizing: border-box; width: 18px; height: 18px; border: 3px solid var(--thumb-ring); border-radius: 50%; background: color-mix(in oklab, var(--card) 40%, transparent); box-shadow: var(--thumb-shadow); backdrop-filter: blur(2px) saturate(1.08); transform: translateX(var(--slider-pull-x)); transition: transform 80ms cubic-bezier(0.22, 1, 0.36, 1); }
 .house-slider input:focus-visible { outline: 2px solid color-mix(in oklab, var(--ring) 55%, transparent); outline-offset: 3px; border-radius: 999px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE SEGMENTED CONTROL, WHICH IS A TRACK AND ONE `.raised` PLATE.
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Carried over whole from the design system the demo's chrome comes from, so
+   the tabs are that object and not a lookalike. `Segmented.tsx` argues the
+   geometry; this block is the hardware.
+
+   IT SITS IN `components` ON PURPOSE. The markup mixes these classes with
+   utilities (`absolute` on the plate before it is measured, `flex` on a full
+   width track), and a utility has to be able to win. */
+@layer components {
+  /* ═══ `.raised`, A LIT FACE AND A GRADIENT RIM ═════════════════════════
+     Every `--raise-*` has a default, so `.raised` alone is a working object; a
+     caller that wants a different face sets `--raise-face`, one that wants
+     different hardware sets the arc. The face falls off over a DISTANCE, not a
+     difference: the two ends are tokens so a small plate can shorten the ramp.
+     .
+     THE LIGHT TAKES THE COLOUR OF WHAT IT LIES ON: the arc is white mixed with
+     the face before it is faded into it, and it keeps its alpha, because the
+     arc is painted over the border box and an opaque rim would paint out the
+     dark ring along the top, which is the half of the object that reports height.
+     .
+     THE TAIL IS A FRACTION OF THE CENTRE, NOT A VALUE, so every override of
+     the centre (dark, the thumb) carries its own tail with it. */
+  .raised {
+    --raise-face: var(--primary);
+    --raise-face-lift: 3%;
+    --raise-face-sink: 4%;
+    --raise-arc-reach: 78%;
+    --raise-arc-tint: color-mix(in oklab, white 70%, var(--raise-face));
+    --raise-arc-width: 1px;
+    --raise-arc-center: color-mix(in oklab, var(--raise-arc-tint) 56%, transparent);
+    --raise-arc-mid: color-mix(in oklab, var(--raise-arc-tint) 18%, transparent);
+    --raise-arc-tail: color-mix(in oklab, var(--raise-arc-center) 15%, transparent);
+    --raise-arc-foot: transparent;
+    --raise-border: color-mix(in oklab, var(--raise-face) 93.5%, black);
+    /* A WIDTH AND NOT A CONSTANT, because `transparent` is not `none`: a rim
+       set only to no colour still shows a 1px band of whatever is behind. */
+    --raise-border-width: 1px;
+    --raise-shadow:
+      inset 0 -1px 0 color-mix(in oklab, black 14%, transparent),
+      0 1px 0 color-mix(in oklab, black 12%, transparent),
+      0 calc(2.5px * var(--shadow-scale)) calc(5px * var(--shadow-scale))
+        oklch(0.12 0 0 / 0.08);
+
+    position: relative;
+    isolation: isolate;
+    border: var(--raise-border-width) solid var(--raise-border);
+    /* ONE LAYER, AND IT IS THE FALLOFF: barely lighter at the top, barely
+       darker at the foot. The moment it is legible as a gradient the object
+       stops being lit and starts being shaded. */
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, white var(--raise-face-lift), var(--raise-face)) 0%,
+      var(--raise-face) 52%,
+      color-mix(in oklab, black var(--raise-face-sink), var(--raise-face)) 100%
+    );
+    box-shadow: var(--raise-shadow);
+  }
+  /* ═══ THE RING IS ON THE BORDER BOX, AND THAT IS WHAT MAKES THE CORNER
+     CLOSE ════════════════════════════════════════════════════════════════
+     .
+     At `inset: 0` with `border-radius: inherit` the ring sat 1px inside the
+     border with the OUTER radius, so the two arcs were not concentric and the
+     ring let go of the outline at 45 degrees. Covering the border box and
+     wearing a transparent border of the host's width makes `inherit` the right
+     radius, and every inner curve one the browser derives. The mask cuts the
+     band at `padding-box`, so the arc never paints over the dark ring. */
+  .raised::before {
+    content: "";
+    position: absolute;
+    inset: calc(-1 * var(--raise-border-width));
+    border: var(--raise-border-width) solid transparent;
+    z-index: 1;
+    border-radius: inherit;
+    padding: var(--raise-arc-width);
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      var(--raise-arc-center) 0%,
+      var(--raise-arc-mid) calc(var(--raise-arc-reach) * 0.33),
+      var(--raise-arc-tail) calc(var(--raise-arc-reach) * 0.7),
+      var(--raise-arc-foot) var(--raise-arc-reach)
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0) padding-box;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0) padding-box;
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+  /* PRESSING IS THE OBJECT'S, NOT THE BRAND'S: any `.raised` face answers. */
+  .raised:hover:not(:disabled):not([aria-disabled="true"]) {
+    filter: brightness(1.025);
+    box-shadow: var(--raise-shadow-hover);
+  }
+  .raised:active:not(:disabled):not([aria-disabled="true"]) {
+    filter: brightness(0.99);
+    box-shadow: var(--raise-shadow-active);
+  }
+  .raised:active:not(:disabled):not([aria-disabled="true"])::before {
+    opacity: 0.72;
+  }
+
+  /* THE FACE IS THE ONE THING THAT FLIPS WITH THE THEME, and not by taste: on
+     ink a raised plate is LIGHTER than its track, on paper it is the paper
+     itself and the track is the thing that went down. */
+  .segmented {
+    position: relative;
+    display: inline-flex;
+    isolation: isolate;
+    background: var(--well);
+    /* THE TRACK IS THE THUMB'S GROUND, AND IT SAYS SO: the dark ring around a
+       plate is cut into whatever the plate stands on, and only here is that known. */
+    --plate-ground: var(--well);
+  }
+  /* A thumb is a small PALE plate whatever size the control is, the worst case
+     for a visible ramp: the face is a few per cent off its track, so a ramp of
+     that order is the loudest thing on the control. What makes a thumb read is
+     its BORDER with the track, the ring and the contact shadow, so in light the
+     ramp is zero. The gradient still exists because dark uses it. */
+  .segmented-face {
+    --raise-face: var(--raised-face-quiet);
+    --raise-face-lift: 0%;
+    --raise-face-sink: 0%;
+    --raise-border: color-mix(in oklab, oklch(0 0 0) 10%, transparent);
+    --raise-arc-width: 1px;
+    --raise-arc-center: color-mix(in oklab, var(--raise-arc-tint) 85%, transparent);
+    --raise-arc-mid: color-mix(in oklab, var(--raise-arc-tint) 42%, transparent);
+    --raise-shadow:
+      0 calc(1px * var(--shadow-scale)) calc(1px * var(--shadow-scale))
+        oklch(0 0 0 / 0.1),
+      0 calc(3px * var(--shadow-scale)) calc(8px * var(--shadow-scale))
+        oklch(0 0 0 / 0.08);
+    --raise-shadow-hover: var(--raise-shadow);
+    --raise-shadow-active: var(--raise-shadow);
+  }
+  /* ═══ UNDER 36, THE SHADOW SHORTENS ════════════════════════════════════
+     Measured on a 36px thumb, the four pixels under the edge are a sixth of a
+     28px one's height and read as a THICK BOTTOM BORDER, not a shadow. Contact
+     at half a pixel, fall at 2 with 4 of blur. Light only: `.dark
+     .segmented-face` has its own casts and wins by order. */
+  .segmented-small.segmented-face {
+    --raise-shadow:
+      0 calc(0.5px * var(--shadow-scale)) calc(1px * var(--shadow-scale))
+        oklch(0 0 0 / 0.08),
+      0 calc(2px * var(--shadow-scale)) calc(4px * var(--shadow-scale))
+        oklch(0 0 0 / 0.05);
+    --raise-shadow-hover: var(--raise-shadow);
+    --raise-shadow-active: var(--raise-shadow);
+  }
+  .segmented-thumb {
+    position: absolute;
+    left: 0;
+    z-index: 0;
+    pointer-events: none;
+    transition:
+      left 260ms cubic-bezier(0.32, 0.72, 0, 1),
+      width 260ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  /* In dark the face is still `--raised-face-quiet`, which already flips; what
+     changes is the hardware: the ring is the ground's shadow, at the medium rung. */
+  .dark .segmented-face {
+    --raise-border: var(--plate-ring-md);
+    --raise-arc-center: color-mix(in oklab, var(--raise-arc-tint) 26%, transparent);
+    --raise-arc-mid: color-mix(in oklab, var(--raise-arc-tint) 13%, transparent);
+    --raise-shadow:
+      0 calc(1px * var(--shadow-scale)) calc(1px * var(--shadow-scale))
+        oklch(0 0 0 / var(--plate-lip)),
+      0 calc(3px * var(--shadow-scale)) calc(8px * var(--shadow-scale))
+        oklch(0 0 0 / var(--plate-fall));
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .segmented-thumb {
+      transition: none;
+    }
+  }
+
+  /* Same weight on every option. The one you are in is not bolder, it is lit. */
+  .segmented-option {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--muted-foreground);
+    transition: color 180ms ease;
+  }
+  .segmented-option[data-on="true"] {
+    color: var(--foreground);
+  }
+  /* ═══ A HAIRLINE BETWEEN TWO UNLIT STATIONS, AND ONLY THERE ════════════
+     Three or more options in one groove read as one long word without it.
+     Beside the plate it is not needed, the plate's edge already is that
+     boundary, so it goes on both sides of the chosen one. Half height, so it
+     does not cut the groove into boxes. */
+  .segmented > .segmented-option + .segmented-option::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 25%;
+    bottom: 25%;
+    width: 1px;
+    transform: translateX(-50%);
+    background: var(--hairline);
+    pointer-events: none;
+    transition: opacity 180ms ease;
+  }
+  .segmented-option[data-on="true"]::before,
+  .segmented-option[data-on="true"] + .segmented-option::before {
+    opacity: 0;
+  }
+  .segmented-option:hover:not([data-on="true"]) {
+    color: var(--foreground);
+  }
+  /* 55% OF THE RING, TWO PIXELS WIDE: the width carries the contrast, so the
+     ink can come down without the ring getting harder to find. */
+  .raised:focus-visible,
+  .segmented-option:focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--ring) 55%, transparent);
+    outline-offset: 2px;
+    animation: var(--focus-ring-settle);
+  }
+
+  .dark .raised {
+    --raise-face-lift: 3.5%;
+    --raise-face-sink: 4%;
+  }
+  /* ═══ THE DARK RING, IN ONE PLACE AND ON ONE KNOB ══════════════════════
+     `--plate-ring` is per cent of black mixed into the ground the plate stands
+     on, and the rungs are offsets from it, clamped at nought because a
+     negative percentage makes the whole `color-mix` invalid rather than no
+     ring. 22 and not more: past that the outline is the loudest thing on a
+     selected tab, an edge that has become a drawing of one.
+     .
+     THE GROUND'S DEFAULT IS IN THE `var()` AND NOT DECLARED HERE: this rule
+     matches the thumb, and a declaration on it would beat the track's own.
+     .
+     THE LIP AND THE FALL ARE TOKENS TOO: a one-pixel blur at half black is not
+     a shadow, it is a second border drawn in a property nobody looks at. */
+  .dark .raised,
+  .dark .segmented-face {
+    --plate-ring: 22;
+    --plate-ring-xs: color-mix(in oklab, oklch(0 0 0) max(0%, calc((var(--plate-ring) - 7) * 1%)), var(--plate-ground, var(--background)));
+    --plate-ring-sm: color-mix(in oklab, oklch(0 0 0) max(0%, calc((var(--plate-ring) - 4) * 1%)), var(--plate-ground, var(--background)));
+    --plate-ring-md: color-mix(in oklab, oklch(0 0 0) max(0%, calc(var(--plate-ring) * 1%)), var(--plate-ground, var(--background)));
+    --plate-ring-lg: color-mix(in oklab, oklch(0 0 0) max(0%, calc((var(--plate-ring) + 3) * 1%)), var(--plate-ground, var(--background)));
+    --plate-lip: 0.09;
+    --plate-fall: 0.105;
+  }
+
+  /* The ring arrives rather than appears. No `outline-offset` in `to`, so it
+     settles on whatever offset the element asks for; the colour is restated
+     so the tail does not interpolate between two representations of it. */
+  @keyframes focus-ring-settle {
+    from {
+      outline-offset: 0;
+      outline-color: transparent;
+    }
+    55% {
+      outline-color: color-mix(in oklab, var(--ring) 55%, transparent);
+    }
+    to {
+      outline-color: color-mix(in oklab, var(--ring) 55%, transparent);
+    }
+  }
+}
+
+/* OUTSIDE THE LAYER, BECAUSE THIS SHEET'S `* { border-color }` IS TOO: an
+   unlayered rule beats any layered one whatever its specificity, so the rim's
+   colour would lose to `--border`. Restated here, it is back to the plate's. */
+.raised { border-color: var(--raise-border); }
+/* The token is what gets turned off, not the selector, so every ring that
+   reads it goes still at once. Unlayered, to beat the `:root` that declares it. */
+@media (prefers-reduced-motion: reduce) {
+  :root { --focus-ring-settle: none; }
+}
 
 /* ═══ WHAT IS THIS DEMO'S OWN ═══════════════════════════════════════════════
    Below this line nothing is shared: the room the picture hangs in, the strip

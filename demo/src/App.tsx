@@ -5,7 +5,7 @@ import { GithubIcon, Menu01Icon, PanelLeftIcon } from "@hugeicons/core-free-icon
 import { ControlPanel } from "@/components/Controls";
 import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/use-media-query";
-import { DEFAULTS, LiquidLens, type Values } from "liquid-lens";
+import { DEFAULTS, LiquidLens, type LiquidLensHandle, type Values } from "liquid-lens";
 import { PHOTOS } from "@/photos";
 
 /**
@@ -109,6 +109,15 @@ export default function App() {
     drag.current = { from: event.clientY, height: event.currentTarget.parentElement?.offsetHeight ?? 0 };
   };
 
+  /* ONE RING ON ARRIVAL, from the middle of the picture, once it has had
+     time to load: the surface says it can be touched before anybody has
+     found that out by accident. */
+  const lens = React.useRef<LiquidLensHandle>(null);
+  React.useEffect(() => {
+    const first = window.setTimeout(() => lens.current?.ripple(), 900);
+    return () => window.clearTimeout(first);
+  }, []);
+
   const touch = typeof window !== "undefined" && !window.matchMedia("(pointer: fine)").matches;
   const panel = { values, setValues, preset, setPreset, photo, setPhoto, custom, setCustom, animate, setAnimate, dark, setDark, paper, touch };
 
@@ -119,7 +128,7 @@ export default function App() {
 
     <main className="stage">
       <div className="stage-ground" aria-hidden="true" />
-      <LiquidLens src={custom.trim() || photo.url} values={values} animate={animate} paper={paper} className="stage-lens" />
+      <LiquidLens ref={lens} src={custom.trim() || photo.url} values={values} animate={animate} paper={paper} className="stage-lens" />
     </main>
 
     {wide && !sidebar && <Button className="sidebar-open-button" variant="outline" size="icon" aria-label="Show controls" title="Show controls" onClick={() => setSidebar(true)}><HugeiconsIcon icon={PanelLeftIcon} size={17} /></Button>}

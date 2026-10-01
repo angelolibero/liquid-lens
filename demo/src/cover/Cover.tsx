@@ -27,14 +27,17 @@ function ReactMark() {
 }
 
 export function Cover() {
+  /* BY ID, NOT BY PLACE: the README's picture is this photograph, and the
+     demo's list can reorder without the cover changing under it. */
+  const photo = PHOTOS.find(option => option.id === "plateau")!;
   const paper = "#f4f4f4";
   return <div className="cover">
     <div className="cover-ground" aria-hidden="true" />
-    <LiquidLens src={PHOTOS[0].url} values={LENS} follow={false} paper={paper} className="cover-lens" />
+    <LiquidLens src={photo.url} values={LENS} follow={false} paper={paper} className="cover-lens" />
 
     <header className="cover-top">
       <span className="cover-mark" aria-hidden="true">
-        <LiquidLens src={PHOTOS[0].card} values={MARK} follow={false} paper={paper} className="absolute inset-0" />
+        <LiquidLens src={photo.card} values={MARK} follow={false} paper={paper} className="absolute inset-0" />
       </span>
       <span className="cover-badge"><ReactMark />React</span>
     </header>

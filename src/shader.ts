@@ -18,6 +18,10 @@
 /** How many bodies chase the pointer. Seven is enough for a waist. */
 export const BODIES = 7;
 
+/** How many ripples can be crossing the lens at once. A fifth press retires
+    the oldest, which by then has nearly died away anyway. */
+export const RIPPLES = 4;
+
 const VERTEX = `
 attribute vec2 aPos;
 void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
@@ -45,6 +49,14 @@ uniform float uFlow;
 
 uniform vec3 uPaper;
 uniform float uVeil;
+
+/* xy: centre in device px. z: age in seconds, negative when the slot is
+   empty. w: the press's own strength, 1 for a click. */
+uniform vec4 uRipple[${RIPPLES}];
+uniform float uRippleStrength;
+uniform float uRippleSpeed;
+uniform float uRippleWidth;
+uniform float uRippleDecay;
 
 /**
  * ---- THE PICTURE FILLS THE BOX WITHOUT BEING STRETCHED -------------------
@@ -168,8 +180,42 @@ float field(vec2 p) {
   return s;
 }
 
+/**
+ * ---- A PRESS IS A DROP ON THE SURFACE -----------------------------------
+ *
+ * Each press sends one ring outward from where it landed, and the ring is a
+ * crest with a trough behind it: one period of a sine under a gaussian
+ * envelope, so it has a front and a back instead of being a band of
+ * brightness. It returns a DISPLACEMENT, radial, in device px, and the
+ * caller spends it twice: on where the picture is read, which is the
+ * refraction a wave makes in what is under it, and on where the field is
+ * measured, which is the shore lifting as the ring crosses it.
+ *
+ * EVERYTHING IS A FRACTION OF THE LIGHT'S RADIUS, as the coastline is, so a
+ * ripple on a phone and on a 5K screen is the same ripple at its own size.
+ * It dies on two clocks: the ring loses height as it ages, and nothing is
+ * computed once a slot is empty, which is most frames.
+ */
+vec2 ripple(vec2 f) {
+  vec2 push = vec2(0.0);
+  if (uRippleStrength <= 0.0) return push;
+  float width = max(uRippleWidth * uR, 1.0);
+  for (int i = 0; i < ${RIPPLES}; i++) {
+    vec4 r = uRipple[i];
+    if (r.z < 0.0) continue;
+    vec2 d = f - r.xy;
+    float dist = length(d);
+    float x = (dist - r.z * uRippleSpeed * uR) / width;
+    if (abs(x) > 3.0) continue;
+    float height = exp(-x * x) * exp(-r.z / max(uRippleDecay, 0.05)) * r.w;
+    push += d / max(dist, 1.0) * sin(x * 3.1415927) * height;
+  }
+  return push * uRippleStrength * uR * 0.12;
+}
+
 void main() {
   vec2 f = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y);
+  vec2 push = ripple(f);
 
   /* ---- THE BOUNDARY IS WARPED BEFORE IT IS FOUND ----------------------
      Bumps alone give a shape made of arcs, and arcs read as geometry. The
@@ -185,7 +231,10 @@ void main() {
   vec2 wobble = vec2(
     vnoise(f * k + vec2(drift * 0.05, 0.0)),
     vnoise(f * k + vec2(11.3, 4.7 - drift * 0.04))) - 0.5;
-  vec2 q = f + wobble * (uWarp * uR);
+  /* The ring lifts the shore as well as bending the picture: the same push,
+     at a little more than half, because the edge is read against flat paper
+     and moves the eye more than the same offset inside the picture does. */
+  vec2 q = f + wobble * (uWarp * uR) + push * 0.6;
 
   float v = field(q);
 
@@ -210,7 +259,7 @@ void main() {
   if (a <= 0.003) { gl_FragColor = vec4(0.0); return; }
 
   float clear = smoothstep(uThresh, uThresh + uBlur, v);
-  gl_FragColor = vec4(sceneBlur(f, uSoft * (1.0 - clear)), a);
+  gl_FragColor = vec4(sceneBlur(f - push, uSoft * (1.0 - clear)), a);
 }
 `;
 

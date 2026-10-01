@@ -11,15 +11,16 @@ The package entry exports `LiquidLens`, the tuning table (`KNOBS`, `DEFAULTS`), 
 | `animate` | `true` | `false` stops the clock: drift, churn, coastline flow and breathing stop in place. The chase still answers the pointer. |
 | `follow` | `true` | `false` ignores the pointer and drifts for good. For a lens much smaller than the window. |
 | `paper` | `"#0b0b0c"` | Hex colour of the page behind the lens; `Room light` (`veil`) mixes the picture toward it. Pass the page's own ground. |
+| `ref` | unset | A `LiquidLensHandle`: `ripple(x?, y?, strength?)` sends one ring from a point in CSS px relative to the box, or from its centre. `strength` scales that ring, 1 being a click. |
 | `className`, `style` | unset | The host box. The component sets no position or size of its own; give the host a size and a position, typically `position: absolute; inset: 0` inside a positioned parent. |
 
-The canvas fills the host box. Outside the shape it is transparent, so the parent's background shows through. The pointer is read from `window` `pointermove` in the host's coordinates; touch pointers are ignored. Without a pointer, or 2.6 s after it leaves, the light drifts on its own. Drawing pauses while the document is hidden. The device pixel ratio is capped at 1.5, except for boxes under 160×160 CSS px, which draw at up to 3.
+The canvas fills the host box. Outside the shape it is transparent, so the parent's background shows through. The pointer is read from `window` `pointermove` in the host's coordinates; touch pointers are ignored. Without a pointer, or 2.6 s after it leaves, the light drifts on its own. A primary press (mouse, pen or touch) inside the box sends a ring, unless it lands on a link, button, field, label or anything marked `data-no-ripple`; up to four rings cross the lens at once, and none are sent under `prefers-reduced-motion`. The ripple knobs set their strength, speed, width and life, and a strength of 0 turns presses off. Drawing pauses while the document is hidden. The device pixel ratio is capped at 1.5, except for boxes under 160×160 CSS px, which draw at up to 3.
 
 If WebGL is unavailable or the shader fails to compile, the host shows the error text in a `<pre>` at its foot.
 
 ## Tuning
 
-`KNOBS` is an array of `{ key, group, label, min, max, step, value, note }`, one per number the look has, in the order a panel shows them. `group` is `"bodies" | "edge" | "picture" | "motion"`. `DEFAULTS` is `{ [key]: value }`. Both ends of every range are reachable on purpose; the README's tables say what each knob does.
+`KNOBS` is an array of `{ key, group, label, min, max, step, value, note }`, one per number the look has, in the order a panel shows them. `group` is `"bodies" | "edge" | "picture" | "ripple" | "motion"`. `DEFAULTS` is `{ [key]: value }`. Both ends of every range are reachable on purpose; the README's tables say what each knob does.
 
 `PRESETS` is an array of `{ id, label, note, values }`, where `values` is a partial set of knobs and the first preset, `"default"`, is empty. `valuesFor(preset)` returns a complete `Values` object with the defaults filled in.
 

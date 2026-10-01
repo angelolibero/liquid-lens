@@ -23,7 +23,7 @@ export type Knob = {
    * three: what a body IS, where its edge falls, and what you see through it.
    * A person hunting for the blur was reading eleven labels to find it.
    */
-  group: "bodies" | "edge" | "picture" | "motion";
+  group: "bodies" | "edge" | "picture" | "ripple" | "motion";
   /** What it is called in the panel. Two words, naming the EFFECT. */
   label: string;
   min: number;
@@ -226,6 +226,49 @@ export const KNOBS: Knob[] = [
     step: 0.05,
     value: 1,
     note: "How fast the coastline noise drifts. Keep it well under the speed of a hand or the surface boils.",
+  },
+  /* ---- THE RIPPLE: what a press does --------------------------------
+     A ring per click or tap, through the picture and across the shore. The
+     strength at 0 is the off switch: a lens behind a form does not want one. */
+  {
+    key: "rippleStrength",
+    group: "ripple",
+    label: "Ripple strength",
+    min: 0,
+    max: 3,
+    step: 0.05,
+    value: 3,
+    note: "How hard a press bends the picture and lifts the shore. 0 turns presses off.",
+  },
+  {
+    key: "rippleSpeed",
+    group: "ripple",
+    label: "Ripple speed",
+    min: 0.2,
+    max: 4,
+    step: 0.05,
+    value: 1,
+    note: "How fast the ring travels, in light radii per second.",
+  },
+  {
+    key: "rippleWidth",
+    group: "ripple",
+    label: "Ripple width",
+    min: 0.05,
+    max: 0.5,
+    step: 0.01,
+    value: 0.1,
+    note: "How wide the ring is: a fine ripple at the low end, a swell at the high end.",
+  },
+  {
+    key: "rippleDecay",
+    group: "ripple",
+    label: "Ripple life",
+    min: 0.2,
+    max: 3,
+    step: 0.05,
+    value: 2,
+    note: "How long a ring keeps its height, in seconds, before the surface is still again.",
   },
 ];
 

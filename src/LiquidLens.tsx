@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { BODIES, SOURCE } from "./shader.js";
+import { BODIES, RIPPLES, SOURCE } from "./shader.js";
 import { DEFAULTS, type Values } from "./knobs.js";
 
 /**
@@ -44,7 +44,25 @@ export type LiquidLensProps = {
   style?: React.CSSProperties;
 };
 
-export function LiquidLens({
+/** What a ref to the lens can do. */
+export type LiquidLensHandle = {
+  /**
+   * Sends one ripple from a point, in CSS px relative to the lens's box, or
+   * from its centre when no point is given. `strength` scales this one ring,
+   * 1 being a click. For a hero that should show it answers before anybody
+   * has pressed anything: one on arrival, one when a heading is hovered.
+   */
+  ripple: (x?: number, y?: number, strength?: number) => void;
+};
+
+/* A PRESS IS INTERACTIVE CONTENT'S BEFORE IT IS THE LENS'S. In a hero the
+   lens sits under a heading and a button, and the window hears every press:
+   one that lands on a link, a button or a field is somebody using the page,
+   and a ring under their click would be the page answering a question
+   nobody asked it. `data-no-ripple` opts anything else out. */
+const INTERACTIVE = "a, button, input, select, textarea, label, summary, [role='button'], [role='slider'], [contenteditable], [data-no-ripple]";
+
+export const LiquidLens = React.forwardRef<LiquidLensHandle, LiquidLensProps>(function LiquidLens({
   src,
   values,
   animate = true,
@@ -52,7 +70,7 @@ export function LiquidLens({
   paper = "#0b0b0c",
   className,
   style,
-}: LiquidLensProps) {
+}, ref) {
   const hostRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const [failed, setFailed] = React.useState<string | null>(null);
@@ -72,6 +90,16 @@ export function LiquidLens({
   const paperRef = React.useRef(paper);
   const animateRef = React.useRef(animate);
   const followRef = React.useRef(follow);
+  /* Presses in CSS px and in the page's clock, newest last. Outside the
+     effect so the handle can add one without the effect being rebuilt. */
+  const pressesRef = React.useRef<{ x: number; y: number; at: number; w: number }[]>([]);
+  React.useImperativeHandle(ref, () => ({
+    ripple(x, y, strength = 1) {
+      const box = hostRef.current?.getBoundingClientRect();
+      if (!box) return;
+      pressesRef.current = [...pressesRef.current, { x: x ?? box.width / 2, y: y ?? box.height / 2, at: performance.now(), w: strength }].slice(-RIPPLES);
+    },
+  }), []);
   React.useLayoutEffect(() => {
     valuesRef.current = merged;
     paperRef.current = paper;
@@ -150,7 +178,12 @@ export function LiquidLens({
       corner: at("uCorner"),
       veil: at("uVeil"),
       flow: at("uFlow"),
+      rippleStrength: at("uRippleStrength"),
+      rippleSpeed: at("uRippleSpeed"),
+      rippleWidth: at("uRippleWidth"),
+      rippleDecay: at("uRippleDecay"),
     };
+    const uRipple = at("uRipple");
 
     /* ---- THE PICTURE -------------------------------------------------- */
     const texture = gl.createTexture();
@@ -209,6 +242,25 @@ export function LiquidLens({
       idle = setTimeout(() => (drifting = true), 2600);
     };
     window.addEventListener("pointermove", onMove, { passive: true });
+
+    /* ---- THE PRESS ------------------------------------------------------
+       TOUCH COUNTS HERE, unlike for the chase: a tap is a deliberate thing
+       done to one point, which is exactly what a ripple answers, and it is
+       the only way a phone gets to touch this at all. Only presses inside
+       the box, not on interactive content, and none when the reader has
+       asked for less motion: a ring is motion and nothing else. */
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const onPress = (event: PointerEvent) => {
+      if (still.matches || !event.isPrimary) return;
+      if (event.target instanceof Element && event.target.closest(INTERACTIVE)) return;
+      const rect = host.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      if (x < 0 || y < 0 || x > rect.width || y > rect.height) return;
+      pressesRef.current = [...pressesRef.current, { x, y, at: performance.now(), w: 1 }].slice(-RIPPLES);
+    };
+    window.addEventListener("pointerdown", onPress, { passive: true });
+    const rings = new Float32Array(RIPPLES * 4);
 
     /* ---- THE BODIES ---------------------------------------------------
        Each chases the pointer at its own rate, so they string out along the
@@ -331,6 +383,20 @@ export function LiquidLens({
       gl.uniform1f(uR, lit);
       gl.uniform1f(uTime, clock);
       gl.uniform4fv(uBlob, blob);
+
+      /* A ring is finished long before six lifetimes: at that age its height
+         is under a quarter of a per cent, and dropping it here is what lets
+         the shader skip the empty slots. */
+      const life = knob("rippleDecay") * 6000;
+      pressesRef.current = pressesRef.current.filter(press => now - press.at < life);
+      rings.fill(-1);
+      pressesRef.current.forEach((press, i) => {
+        rings[i * 4] = press.x * dpr;
+        rings[i * 4 + 1] = press.y * dpr;
+        rings[i * 4 + 2] = (now - press.at) / 1000;
+        rings[i * 4 + 3] = press.w;
+      });
+      gl.uniform4fv(uRipple, rings);
       const [r, g, b] = paperRGB();
       gl.uniform3f(uPaper, r, g, b);
       for (const [key, loc] of Object.entries(knobLoc)) {
@@ -351,6 +417,7 @@ export function LiquidLens({
       cancelAnimationFrame(raf);
       observer.disconnect();
       window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerdown", onPress);
       if (idle) clearTimeout(idle);
       gl.deleteProgram(program);
       gl.deleteShader(vs);
@@ -376,4 +443,4 @@ export function LiquidLens({
       ) : null}
     </div>
   );
-}
+});

@@ -11,13 +11,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { HouseSlider } from "@/components/HouseSlider";
+import { Segmented } from "@/components/Segmented";
 import { SidebarBrand } from "@/components/SidebarBrand";
 
-/** The four questions the panel is sorted by, in the order they are decided. */
+/** The five questions the panel is sorted by, in the order they are decided. */
 const SECTIONS = [
   { id: "bodies", label: "Bodies" },
   { id: "edge", label: "Edge" },
   { id: "picture", label: "Picture" },
+  { id: "ripple", label: "Ripple" },
   { id: "motion", label: "Movement" },
 ] as const;
 
@@ -79,6 +81,10 @@ export function ControlPanel({ onClose, ...props }: ControlProps & { onClose?: (
   const urlId = React.useId();
   const animateId = React.useId();
   const chosen = PRESETS.find(option => option.id === preset);
+  /* THE TAB ONLY BROWSES. Switching it shows the other strip and leaves the
+     picture alone, so looking through the photographs never costs the
+     abstract you were tuning against; it opens on the kind on screen. */
+  const [kind, setKind] = React.useState<Photo["kind"]>(photo.kind);
 
   const reset = () => { setPreset("default"); setValues({ ...DEFAULTS }); setAnimate(true); };
   const copy = async () => {
@@ -97,8 +103,8 @@ export function ControlPanel({ onClose, ...props }: ControlProps & { onClose?: (
     <SidebarBrand dark={props.dark} setDark={props.setDark} onClose={onClose} photo={photo.card} paper={props.paper} />
     <div className="controls-intro">
       <p>{props.touch
-        ? "Seven soft bodies merge into one shape and show the picture only where they are. It follows a pointer, so on a touch screen it drifts by itself."
-        : "Move the pointer. Seven soft bodies chase it, their fields merge, and the picture is only drawn where they are."}</p>
+        ? "Seven soft bodies merge into one shape and show the picture only where they are. It drifts by itself here; tap it and it ripples."
+        : "Move the pointer and seven soft bodies chase it, merging into one shape that shows the picture. Click it and it ripples."}</p>
     </div>
     <Separator />
 
@@ -106,9 +112,11 @@ export function ControlPanel({ onClose, ...props }: ControlProps & { onClose?: (
         entirely about how something looks would be a list to decode; a card
         with the frame in it answers the question before it is asked. */}
     <div className="control-group">
-      <div className="group-title"><span>Photograph</span></div>
-      <div className="photo-strip">
-        {PHOTOS.map(option => {
+      <div className="group-title group-title-action"><span>Image</span>
+        <Segmented size="xs" aria-label="Kind of picture" value={kind} onChange={setKind} options={[{ value: "abstract", label: "Abstract" }, { value: "photo", label: "Photo" }]} />
+      </div>
+      <div className="photo-strip" key={kind}>
+        {PHOTOS.filter(option => option.kind === kind).map(option => {
           const on = !custom && option.id === photo.id;
           return <button key={option.id} type="button" className="photo-card" aria-pressed={on} onClick={() => { setCustom(""); setPhoto(option); }}>
             <span className="photo-frame"><img src={option.card} alt="" loading="lazy" /></span>

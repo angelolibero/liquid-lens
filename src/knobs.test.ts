@@ -62,7 +62,7 @@ describe("shader", () => {
   /* The component looks these up by name, and a uniform the shader does not
      declare is a null location: the knob would move and nothing would change. */
   it("declares every uniform the component sets", () => {
-    for (const name of ["uImage", "uImageSize", "uRes", "uR", "uTime", "uBlob", "uPaper", "uThresh", "uFade", "uBlur", "uSoft", "uWarp", "uGrain", "uCorner", "uVeil", "uFlow"]) {
+    for (const name of ["uImage", "uImageSize", "uRes", "uR", "uTime", "uBlob", "uPaper", "uThresh", "uFade", "uBlur", "uSoft", "uWarp", "uGrain", "uCorner", "uVeil", "uFlow", "uRipple", "uRippleStrength", "uRippleSpeed", "uRippleWidth", "uRippleDecay"]) {
       expect(SOURCE.FRAGMENT, name).toMatch(new RegExp(`uniform\\s+\\w+\\s+${name}\\b`));
     }
   });
