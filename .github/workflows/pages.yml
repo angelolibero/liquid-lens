@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy demo
 
 on:
   push:
@@ -7,11 +7,9 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  group: github-pages
   cancel-in-progress: true
 
 jobs:
@@ -23,16 +21,26 @@ jobs:
         with:
           node-version: 24
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            demo/package-lock.json
       - run: npm ci
       - run: npm run build
+      - run: npm ci
+        working-directory: demo
+      - run: npm run build
+        working-directory: demo
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v4
         with:
-          path: dist
+          path: demo/dist
 
   deploy:
-    needs: build
     runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

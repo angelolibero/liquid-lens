@@ -1,7 +1,7 @@
 import * as React from "react";
 
-import { BODIES, SOURCE } from "./shader";
-import { DEFAULTS, type Values } from "./knobs";
+import { BODIES, SOURCE } from "./shader.js";
+import { DEFAULTS, type Values } from "./knobs.js";
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════
@@ -18,14 +18,7 @@ import { DEFAULTS, type Values } from "./knobs";
  * drop the texture, which is how a knob becomes something you set rather than
  * something you TURN.
  */
-export function LiquidLens({
-  src,
-  values,
-  animate = true,
-  follow = true,
-  paper = "#0b0b0c",
-  className,
-}: {
+export type LiquidLensProps = {
   /** Any image the browser can load with CORS. Unsplash's CDN sends the
       header, so its URLs work as they are. */
   src: string;
@@ -46,8 +39,20 @@ export function LiquidLens({
   /** The room's own paper: what `Room light` mixes toward, and what a
       no-WebGL fallback would stand on. */
   paper?: string;
+  /** The box. Size and position are the caller's: give it one, or it is 0px tall. */
   className?: string;
-}) {
+  style?: React.CSSProperties;
+};
+
+export function LiquidLens({
+  src,
+  values,
+  animate = true,
+  follow = true,
+  paper = "#0b0b0c",
+  className,
+  style,
+}: LiquidLensProps) {
   const hostRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const [failed, setFailed] = React.useState<string | null>(null);
@@ -355,16 +360,17 @@ export function LiquidLens({
     };
   }, [src]);
 
-  /* NO INLINE POSITION HERE. It was `style={{ position: "relative" }}`, which
-     is an inline style and therefore beats whatever the caller puts in
-     `className`: passing `absolute inset-0` left the host static and 279px
-     tall. The caller owns the box; this owns what is drawn in it. The default
-     class keeps the failure log positioned when no class is given. */
+  /* THE CALLER OWNS THE BOX, through `className` or `style`, and this owns
+     what is drawn in it. NO POSITION OF ITS OWN: an inline `position` beats
+     any class, so a default here once left a host given `absolute inset-0`
+     static and 279px tall. Position the host (absolute, relative, fixed) and
+     the failure note sits in it. No CSS framework: the demo's classes are the
+     demo's. */
   return (
-    <div ref={hostRef} className={className ?? "relative h-full w-full"}>
-      <canvas ref={canvasRef} className="block h-full w-full" />
+    <div ref={hostRef} className={className} style={style}>
+      <canvas ref={canvasRef} style={{ display: "block", width: "100%", height: "100%" }} />
       {failed ? (
-        <pre className="absolute inset-x-0 bottom-0 m-0 overflow-auto p-3 text-xs whitespace-pre-wrap text-red-300">
+        <pre style={{ position: "absolute", left: 0, right: 0, bottom: 0, margin: 0, padding: 12, overflow: "auto", font: "12px/1.4 ui-monospace, monospace", whiteSpace: "pre-wrap", color: "#fca5a5" }}>
           {failed}
         </pre>
       ) : null}

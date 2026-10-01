@@ -1,4 +1,4 @@
-import { DEFAULTS, type Values } from "./knobs";
+import { DEFAULTS, type Values } from "./knobs.js";
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════

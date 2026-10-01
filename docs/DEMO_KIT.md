@@ -6,7 +6,7 @@ by side and the only things that differ should be the effect and its knobs.
 This file says what is shared, where it comes from, and what each demo is
 allowed to make its own.
 
-**The reference is Surface Field's `demo/`.** It was drawn first and it is
+**The reference is Surface Field's `demo/`.** Both repositories have the same layout: the package at the root, the demo in `demo/`, so the paths below line up. It was drawn first and it is
 where a change to the family starts. Nothing is a package: the shared files
 are copied, and a fix in one demo is copied into the other in the same sitting.
 A shared package starts paying for itself at the third demo, not before.
@@ -15,13 +15,13 @@ A shared package starts paying for itself at the third demo, not before.
 
 | What | Where in the reference | Where here |
 | --- | --- | --- |
-| Tokens: paper, ink, corners, casts, lit edges, float glass | `demo/src/index.css`, top to `@theme inline` | `src/index.css`, the same block |
-| Type: Figtree for text, Plus Jakarta Sans for names and titles | `demo/src/fonts/` | `src/fonts/` |
+| Tokens: paper, ink, corners, casts, lit edges, float glass | `demo/src/index.css`, top to `@theme inline` | `demo/src/index.css`, the same block |
+| Type: Figtree for text, Plus Jakarta Sans for names and titles | `demo/src/fonts/` | `demo/src/fonts/` |
 | Icons: Hugeicons (free set) | | |
-| Controls: shadcn new-york on `radix-ui` (button, select, switch, label, separator) | `demo/src/components/ui/` | `src/components/ui/` |
-| The slider: a 22px recessed track and a ringed thumb | `HouseSlider.tsx` | `src/components/HouseSlider.tsx` |
-| The brand block: live mark, name, one line, theme switch, close | `SidebarBrand.tsx` | `src/components/SidebarBrand.tsx` |
-| The favicon: the mark as a 64px SVG tile, dark with the system | `demo/public/favicon.svg` | `public/favicon.svg` |
+| Controls: shadcn new-york on `radix-ui` (button, select, switch, label, separator) | `demo/src/components/ui/` | `demo/src/components/ui/` |
+| The slider: a 22px recessed track and a ringed thumb | `HouseSlider.tsx` | `demo/src/components/HouseSlider.tsx` |
+| The brand block: live mark, name, one line, theme switch, close | `SidebarBrand.tsx` | `demo/src/components/SidebarBrand.tsx` |
+| The favicon: the mark as a 64px SVG tile, dark with the system | `demo/public/favicon.svg` | `demo/public/favicon.svg` |
 
 ## The shell
 
@@ -62,7 +62,7 @@ Name as the H1, the cover image directly under it, one paragraph of what it
 is, one line linking the live demo, then how to use it, how to run it, and the
 licence with the author's name.
 
-The cover is a page, `cover.html`, drawn by the real component and never
+The cover is a page, `demo/cover.html`, drawn by the real component and never
 built into the site: a 1600×900 stage captured by a headless Chrome at device
 scale 2. The layout is fixed across the family:
 

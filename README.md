@@ -13,33 +13,49 @@ at the edge and sharp deep in; outside it there is nothing.
 number it has is a slider, because an effect shown at one tuning is a
 screenshot that happens to move.
 
-## Using it
+## Use it
 
-```tsx
-import { LiquidLens } from "./liquid-lens/LiquidLens";
+Install from GitHub:
 
-<LiquidLens
-  src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1600"
-  className="absolute inset-0"
-/>;
-
-// or, with its own tuning and nothing moving by itself
-<LiquidLens
-  src={url}
-  values={{ corner: 7.4, warp: 0.06, fade: 0.02 }}
-  animate={false}
-  className="absolute inset-0"
-/>;
+```bash
+npm install github:angelolibero/liquid-lens
 ```
 
-That is the whole API. `values` takes any of the knobs below and falls back to
-the defaults for the rest; `paper` is the colour `Room light` mixes toward;
+React 18 or 19 is a peer dependency. Git installation runs the package's
+`prepare` build, so consumers receive JavaScript and TypeScript declarations
+without compiling the source themselves. The runtime imports React and
+nothing else: no CSS, no framework, plain WebGL.
+
+```tsx
+import { LiquidLens } from "liquid-lens";
+
+export function Hero() {
+  return <div style={{ position: "relative", height: 560 }}>
+    <LiquidLens
+      src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1600"
+      paper="#ffffff"
+      style={{ position: "absolute", inset: 0 }}
+    />
+  </div>;
+}
+
+// or with its own tuning, a preset, and nothing moving by itself
+import { PRESETS, valuesFor } from "liquid-lens";
+
+<LiquidLens src={url} values={valuesFor(PRESETS[1])} animate={false} style={{ position: "absolute", inset: 0 }} />;
+```
+
+The parent supplies size, position and background; the lens fills the box it
+is given and draws nothing outside the shape. `values` takes any of the knobs
+below and falls back to the defaults for the rest. `paper` is the colour
+`Room light` mixes toward, and should be the page's own ground.
 `follow={false}` stops it chasing the pointer and leaves it drifting, which is
 what a lens much smaller than the window wants (the demo's logo is one).
+`KNOBS`, `DEFAULTS` and `PRESETS` are exported, so a panel of your own can be
+built from the same table the demo's is. See the [API](docs/API.md) and the
+[architecture](docs/ARCHITECTURE.md).
 
-Copy `src/liquid-lens/` into your project: five files with no dependency
-beyond React. The component, the shader, the table of knobs, the presets, and
-the list of demo photographs you will probably replace.
+The demo's `Copy config` writes a ready component with the tuning you landed on.
 
 ## The knobs
 
@@ -81,7 +97,7 @@ nothing else.
 `Liquid lens`, `Mercury`, `Tiles`, `Mist`, `Ink`, `Frosted`, `Comet`, `Lake`.
 Each turns one or two decisions hard over and lets the rest follow, rather
 than nudging nine numbers nobody could name. They are in
-`src/liquid-lens/presets.ts` with a line each saying what the move was.
+`src/presets.ts` with a line each saying what the move was.
 
 **Two of these fight each other.** The corners live in the level line and the
 warp displaces where that line is read, so above about 0.15 of `Coast wander`
@@ -130,23 +146,27 @@ draws nothing, that header is why.
 
 Photographs in the demo by Kalen Emsley, Sergey Pesterev, Casey Horner,
 Pedro Lastra and Ayo Ogunseinde, on Unsplash. The cover at the top of this
-file is not a mockup: it is `cover.html`, a page that draws the real
+file is not a mockup: it is `demo/cover.html`, a page that draws the real
 component over Kalen Emsley's photograph, captured at twice its size. Run
-`npm run dev`, open `/liquid-lens/cover.html`, and it is there.
+`npm run demo`, open `/liquid-lens/cover.html`, and it is there.
 
-## Running it
+## Develop
 
 ```bash
-npm install
-npm run dev
+npm ci
+npm run typecheck
+npm test
+npm run build
+cd demo && npm ci && npm run dev
 ```
 
-React, Vite, Tailwind and a few shadcn/ui components for the panel, on the
-Radix primitives, with Hugeicons. The panel and its shell are the same as
-[Surface Field](https://github.com/angelolibero/surface-field)'s demo, so the
-two read as one family; `docs/DEMO_KIT.md` says what is shared. The effect
-itself is plain WebGL and knows about none of them: `src/liquid-lens/` is five
-files you can copy into anything.
+The demo is a separate Vite app in `demo/`: React, Tailwind and a few
+shadcn/ui components on the Radix primitives, with Hugeicons. Its panel and
+shell are the same as [Surface Field](https://github.com/angelolibero/surface-field)'s
+demo, so the two read as one family; [`docs/DEMO_KIT.md`](docs/DEMO_KIT.md)
+says what is shared. The library knows about none of it. `npm run demo:build`
+builds both package and demo; `npm pack` includes the built library and docs,
+not the demo app.
 
 ## License
 

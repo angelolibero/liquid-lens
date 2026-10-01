@@ -5,9 +5,8 @@ import { GithubIcon, Menu01Icon, PanelLeftIcon } from "@hugeicons/core-free-icon
 import { ControlPanel } from "@/components/Controls";
 import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/use-media-query";
-import { LiquidLens } from "@/liquid-lens/LiquidLens";
-import { DEFAULTS, type Values } from "@/liquid-lens/knobs";
-import { PHOTOS } from "@/liquid-lens/photos";
+import { DEFAULTS, LiquidLens, type Values } from "liquid-lens";
+import { PHOTOS } from "@/photos";
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════

@@ -2,7 +2,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Moon02Icon, PanelLeftCloseIcon, Sun02Icon } from "@hugeicons/core-free-icons";
 
 import { Button } from "@/components/ui/button";
-import { LiquidLens } from "@/liquid-lens/LiquidLens";
+import { LiquidLens } from "liquid-lens";
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════

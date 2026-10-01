@@ -9,5 +9,9 @@ export default defineConfig({
      it to "/" if you deploy at a domain root. */
   base: "/liquid-lens/",
   plugins: [react(), tailwindcss()],
-  resolve: { alias: { "@": path.resolve(__dirname, "./src") } },
+  resolve: {
+    alias: { "@": path.resolve(import.meta.dirname, "src") },
+    // The local package link must use the demo's React instance for hooks.
+    dedupe: ["react", "react-dom"],
+  },
 });

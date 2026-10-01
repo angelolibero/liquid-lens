@@ -1,8 +1,8 @@
 import { HugeiconsIcon } from "@hugeicons/react";
 import { GithubIcon, PackageIcon } from "@hugeicons/core-free-icons";
 
-import { LiquidLens } from "@/liquid-lens/LiquidLens";
-import { PHOTOS } from "@/liquid-lens/photos";
+import { LiquidLens } from "liquid-lens";
+import { PHOTOS } from "@/photos";
 
 /* ── THE README COVER, drawn by the component it advertises. A fixed 1600×900
    stage: `npm run dev`, open /liquid-lens/cover.html, and a headless Chrome

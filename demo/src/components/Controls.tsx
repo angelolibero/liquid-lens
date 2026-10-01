@@ -2,9 +2,8 @@ import * as React from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { CheckmarkCircleIcon, Copy01Icon, RotateCcwIcon } from "@hugeicons/core-free-icons";
 
-import { KNOBS, DEFAULTS, type Knob, type Values } from "@/liquid-lens/knobs";
-import { PHOTOS, type Photo } from "@/liquid-lens/photos";
-import { PRESETS, valuesFor } from "@/liquid-lens/presets";
+import { DEFAULTS, KNOBS, PRESETS, valuesFor, type Knob, type Values } from "liquid-lens";
+import { PHOTOS, type Photo } from "@/photos";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,7 +32,7 @@ function snippet(values: Values, src: string, animate: boolean) {
     ...(changed.length ? [`values={{ ${changed.map(([key, value]) => `${key}: ${value}`).join(", ")} }}`] : []),
     ...(animate ? [] : ["animate={false}"]),
   ];
-  return `import { LiquidLens } from "./liquid-lens/LiquidLens";\n\nexport function Lens() {\n  return (\n    <div style={{ position: "relative", height: 480 }}>\n      <LiquidLens\n${props.map(line => `        ${line}`).join("\n")}\n      />\n    </div>\n  );\n}`;
+  return `import { LiquidLens } from "liquid-lens";\n\nexport function Lens() {\n  return (\n    <div style={{ position: "relative", height: 480 }}>\n      <LiquidLens\n${props.map(line => `        ${line}`).join("\n")}\n        style={{ position: "absolute", inset: 0 }}\n      />\n    </div>\n  );\n}`;
 }
 
 /* As many decimals as the step has, so a value never shows a digit the
