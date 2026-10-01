@@ -22,6 +22,7 @@ export function LiquidLens({
   src,
   values,
   animate = true,
+  follow = true,
   paper = "#0b0b0c",
   className,
 }: {
@@ -35,6 +36,13 @@ export function LiquidLens({
    * the frame loop for why that is the whole implementation.
    */
   animate?: boolean;
+  /**
+   * Whether it chases the pointer. False leaves it drifting for good, which
+   * is what a lens much smaller than the window wants: the pointer is almost
+   * never over it, and chasing a hand from across the page would carry every
+   * body out of the box and leave it empty.
+   */
+  follow?: boolean;
   /** The room's own paper: what `Room light` mixes toward, and what a
       no-WebGL fallback would stand on. */
   paper?: string;
@@ -44,21 +52,27 @@ export function LiquidLens({
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const [failed, setFailed] = React.useState<string | null>(null);
 
-  /* `exactOptionalPropertyTypes` is on in this template, so a spread of a
-     Partial can put `undefined` on a key. The merge drops those rather than
-     letting one reach the shader as NaN. */
+  /* A caller's spread of a Partial can put `undefined` on a key. The merge
+     drops those rather than letting one reach the shader as NaN. */
   const merged: Values = { ...DEFAULTS };
   for (const [key, value] of Object.entries(values ?? {})) {
     if (typeof value === "number") merged[key] = value;
   }
+
+  /* THE PROPS REACH THE FRAME LOOP THROUGH REFS, written after each render
+     and before the next frame. A layout effect and not an assignment in the
+     body, because a render React throws away must not leak its props into a
+     loop that is drawing the committed ones. */
   const valuesRef = React.useRef<Values>(merged);
-  valuesRef.current = merged;
-
   const paperRef = React.useRef(paper);
-  paperRef.current = paper;
-
   const animateRef = React.useRef(animate);
-  animateRef.current = animate;
+  const followRef = React.useRef(follow);
+  React.useLayoutEffect(() => {
+    valuesRef.current = merged;
+    paperRef.current = paper;
+    animateRef.current = animate;
+    followRef.current = follow;
+  });
 
   React.useEffect(() => {
     const host = hostRef.current;
@@ -181,7 +195,7 @@ export function LiquidLens({
     let idle: ReturnType<typeof setTimeout> | null = null;
 
     const onMove = (event: PointerEvent) => {
-      if (event.pointerType === "touch") return;
+      if (event.pointerType === "touch" || !followRef.current) return;
       box = host.getBoundingClientRect();
       target.x = event.clientX - box.left;
       target.y = event.clientY - box.top;
@@ -210,8 +224,11 @@ export function LiquidLens({
       box = host.getBoundingClientRect();
       /* Capped device pixel ratio: this is a full-box fragment shader with a
          twelve-tap blur in it, and a phone's 3x would be nine times the work
-         for a difference nobody can see through a blur. */
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+         for a difference nobody can see through a blur. A box the size of an
+         icon is the exception: there the whole frame is a few thousand pixels,
+         and at 1.5 its edge is visibly stepped on a retina screen. */
+      const small = box.width * box.height < 160 * 160;
+      const dpr = Math.min(window.devicePixelRatio || 1, small ? 3 : 1.5);
       const w = Math.max(1, Math.round(box.width * dpr));
       const h = Math.max(1, Math.round(box.height * dpr));
       if (canvas.width !== w || canvas.height !== h) {

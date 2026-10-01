@@ -1,160 +1,423 @@
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
 
 @custom-variant dark (&:is(.dark *));
 
+@font-face { font-family: Figtree; font-style: normal; font-weight: 400 700; font-display: swap; src: url("./fonts/figtree-8330490a.woff2") format("woff2"); }
+@font-face { font-family: "Plus Jakarta Sans"; font-style: normal; font-weight: 500; font-display: swap; src: url("./fonts/PlusJakartaSans-Medium.ttf") format("truetype"); }
+@font-face { font-family: "Plus Jakarta Sans"; font-style: normal; font-weight: 700; font-display: swap; src: url("./fonts/PlusJakartaSans-Bold.ttf") format("truetype"); }
+
+/* ═══ THE HOUSE TOKENS ═════════════════════════════════════════════════════
+   Carried over whole from Surface Field's demo, which is where this family of
+   demos takes its look from: the same paper, the same ink, the same ladder of
+   corners and the same casts, so two of them open side by side read as one
+   author's. `docs/DEMO_KIT.md` lists what is shared and what is this demo's.
+   Change a token here and in the reference together, or they drift. */
+:root {
+  --radius: 0.875rem;
+  /* ═══ ONE LADDER OF CORNERS, NAMED BY WHAT THE OBJECT IS ═══════════════
+     Every rung is a multiple of `--round-scale`, so a rounder or squarer demo
+     is one number and the corners keep their ratios. The rungs come from the
+     design system this chrome was drawn in: a corner is chosen by the size and
+     role of the box, never guessed per rule, and a box that holds another box
+     takes the rung above. */
+  --round-scale: 1;
+  --radius-box: calc(11px * var(--round-scale));   /* a 36px mark */
+  --radius-control-sm: calc(12px * var(--round-scale)); /* a 36px control */
+  --radius-plate: calc(13px * var(--round-scale)); /* a well inside a panel */
+  --radius-card: calc(16px * var(--round-scale));  /* the card: an object, a node */
+  --radius-panel: calc(18px * var(--round-scale)); /* a card that holds other things */
+  --radius-slab: calc(20px * var(--round-scale));  /* the tallest plate on the page */
+  --background: oklch(0.971 0 0);
+  --foreground: oklch(0.22 0 0);
+  --card: oklch(0.998 0 0);
+  --sidebar: oklch(0.984 0 0);
+  --card-foreground: var(--foreground);
+  --popover: oklch(0.999 0 0);
+  --popover-foreground: var(--foreground);
+  --primary: oklch(0.24 0 0);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.955 0 0);
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(0.955 0 0);
+  --muted-foreground: oklch(0.55 0 0);
+  --accent: oklch(0.94 0 0);
+  --accent-foreground: var(--foreground);
+  --destructive: oklch(0.6 0.22 25);
+  --border: oklch(0.905 0 0);
+  --input: oklch(0.9 0 0);
+  --ring: oklch(0.24 0 0);
+  --hairline: color-mix(in oklab, var(--foreground) 8%, transparent);
+  --thumb-ring: var(--card);
+  --thumb-shadow: 0 1px 2px oklch(0 0 0 / 28%);
+  --track-fill: color-mix(in oklab, var(--muted) 92%, var(--foreground) 8%);
+
+  /* ═══ A CARD IS A HAIR UNDER WHITE ══════════════════════════════════════
+     The lit top edge needs something to be white AGAINST. On paper at 0.998 a
+     white line is invisible, so the face is 0.987: low enough that the edge
+     reads along its whole width, high enough that the card still reads white.
+     `--card` stays white for what means white: a menu, a thumb, a track. */
+  --card-face: oklch(0.987 0 0);
+  --thumb-face: var(--card);
+  /* ═══ THE GROOVE AND THE PLATE IN IT ═══════════════════════════════════
+     `--well` is a track cut INTO the paper, not a secondary button standing on
+     it: in light the two answers coincide, in dark they are a point of L apart
+     and a track tinted like a button vanished into the panel holding it.
+     `--raised-face-quiet` is the plate that slides in it. On paper it is not
+     quite the paper: a white lit edge on a white face is a highlight nobody
+     can see, and three per cent of ink gives the edge something to sit against. */
+  --well: oklch(0.955 0 0);
+  --raised-face-quiet: color-mix(in oklab, var(--foreground) 3%, var(--card));
+  --focus-ring-settle: focus-ring-settle 200ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ═══ HOW FAR THINGS FALL, AND THE ONE INK THEY FALL IN ════════════════
+     `--shadow-scale` moves every blurred layer and no line: a lit edge or a
+     hairline is geometry, and scaling it takes the object's edge away instead
+     of lowering it. 1.35 and not higher because this page stacks casts, a pill
+     over the field over a card, and past it two planes read as one bruise.
+     .
+     THE INK IS A FIXED DARK AND NEVER `--foreground`. A cast is the absence of
+     light, and `--foreground` is whatever the text is: in dark it is near
+     white, so a shadow mixed from it is a pale halo round every card. That was
+     this demo's dark mode. The ink is a warm-free grey here and pure black in
+     dark, and nothing else in the scale knows which theme it is in. */
+  --shadow-scale: 1.35;
+  --shadow-ink: oklch(0.3 0 0);
+  --hl-top: inset 0 1px 0 oklch(1 0 0 / 0.6);
+  --shadow-e1: 0 calc(1px * var(--shadow-scale)) calc(2px * var(--shadow-scale))
+    color-mix(in oklab, var(--shadow-ink) 5%, transparent);
+  /* e2 is RESTING: a card on the page. Two layers, a tight contact and a wide
+     ambient, because one blur is either a smudge or a halo and never both. */
+  --shadow-e2:
+    0 calc(1px * var(--shadow-scale)) calc(2px * var(--shadow-scale))
+      color-mix(in oklab, var(--shadow-ink) 4%, transparent),
+    0 calc(8px * var(--shadow-scale)) calc(22px * var(--shadow-scale))
+      color-mix(in oklab, var(--shadow-ink) 6%, transparent);
+  /* The hover rung, BETWEEN e2 and e3: a card under the pointer answers, it
+     does not claim to float as far off the page as the chrome does. */
+  --shadow-lift:
+    0 calc(3px * var(--shadow-scale)) calc(8px * var(--shadow-scale))
+      color-mix(in oklab, var(--shadow-ink) 5%, transparent),
+    0 calc(14px * var(--shadow-scale)) calc(32px * var(--shadow-scale))
+      color-mix(in oklab, var(--shadow-ink) 9%, transparent);
+  /* e3 is FLOATING: chrome over the field, a menu, a card being carried. */
+  --shadow-e3:
+    0 calc(6px * var(--shadow-scale)) calc(16px * var(--shadow-scale))
+      color-mix(in oklab, var(--shadow-ink) 7%, transparent),
+    0 calc(26px * var(--shadow-scale)) calc(50px * var(--shadow-scale))
+      color-mix(in oklab, var(--shadow-ink) 12%, transparent);
+  /* A small plate lifting off its own track: the tab thumb. A 1px dark foot
+     and a lip under the face say *pressable*, which a card must not say. */
+  --shadow-plate:
+    inset 0 -1px 0 color-mix(in oklab, oklch(0 0 0) 8%, transparent),
+    0 1px 0 color-mix(in oklab, oklch(0 0 0) 8%, transparent),
+    0 calc(2.5px * var(--shadow-scale)) calc(5px * var(--shadow-scale))
+      color-mix(in oklab, var(--shadow-ink) 8%, transparent);
+
+  /* ═══ THE CARD'S RING FADES DOWN ════════════════════════════════════════
+     Dark above the lit edge, almost gone at the foot: up top it is what the
+     white line is seen against, at the bottom the cast is already separating
+     paper from page and a full ring would be a second outline saying it
+     again. SOLID stops mixed into the page, not black over nothing, so a card
+     over a bright patch of the field does not lose its fade. The middle stop
+     sits above half because the ring's work is at the top. */
+  --surface-ring-top: color-mix(in oklab, var(--foreground) 9.5%, var(--background));
+  --surface-ring-mid: color-mix(in oklab, var(--foreground) 4.5%, var(--background));
+  --surface-ring-foot: color-mix(in oklab, var(--foreground) 1.5%, var(--background));
+  --surface-ring-mid-at: 45%;
+  /* The lit top edge of a card, and how far down it lets go. A DISTANCE, not
+     a percentage: a card is 68px or 400px, and a highlight that fades over
+     half of it is a gradient again. 22px is a top catching light. */
+  --lit-edge: color-mix(in oklab, white 45%, transparent);
+  --lit-edge-mid: color-mix(in oklab, white 20%, transparent);
+  --lit-edge-reach: 22px;
+  /* What floats over the field is glass in light: 90% of the face lets the
+     field's colour through, the blur keeps it colour and never shape, and the
+     saturation stops a blurred tint arriving as grey. */
+  --float-face: color-mix(in oklab, var(--card-face) 90%, transparent);
+  --float-filter: blur(24px) saturate(1.8);
+}
+
+.dark {
+  --background: oklch(0.195 0 0);
+  --foreground: oklch(0.955 0 0);
+  --card: oklch(0.245 0 0);
+  --sidebar: oklch(0.245 0 0);
+  --card-foreground: var(--foreground);
+  --popover: oklch(0.262 0 0);
+  --popover-foreground: var(--foreground);
+  --primary: oklch(0.97 0 0);
+  --primary-foreground: oklch(0.22 0 0);
+  --secondary: oklch(0.275 0 0);
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(0.275 0 0);
+  --muted-foreground: oklch(0.71 0 0);
+  --accent: oklch(0.305 0 0);
+  --accent-foreground: var(--foreground);
+  --destructive: oklch(0.7 0.19 23);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 13%);
+  --ring: oklch(0.97 0 0);
+  --hairline: oklch(1 0 0 / 0.09);
+  --thumb-ring: var(--foreground);
+  --thumb-shadow: 0 1px 2px oklch(0 0 0 / 45%);
+
+  /* ═══ IN DARK, A PLANE IS A LIGHTER FACE WITH A LIT EDGE ════════════════
+     There is no white page for a cast to work against, so separation comes
+     from three things in this order: a face one step above the ground (0.245
+     over 0.195, chrome one more at 0.262), a hairline of light where it ends,
+     and a lit top edge. The cast only has to say *there is a gap*, and it
+     says it in black, never in the text colour.
+     .
+     THE CASTS ARE DILUTED, NOT ONLY DEEPENED. A 22px blur under a card on a
+     dark ground is a defined bowl of black and reads heavy at any opacity
+     because the eye finds its edge. So the ambient layer falls further and
+     spreads twice as wide: the same ink over four times the area, which
+     darkens the ground instead of drawing a hole under the card. */
+  --card-face: var(--card);
+  --thumb-face: color-mix(in oklab, var(--foreground) 8%, var(--accent));
+  --well: oklch(0.225 0 0);
+  --raised-face-quiet: var(--thumb-face);
+  --shadow-ink: oklch(0 0 0);
+  /* 0.11 AND NOT 0.6: the same alpha that is a soft edge on white paper is a
+     drawn white rule on near black. Seen, not noticed. */
+  --hl-top: inset 0 1px 0 oklch(1 0 0 / 0.11);
+  --shadow-e1: 0 calc(1px * var(--shadow-scale)) calc(2px * var(--shadow-scale))
+    color-mix(in oklab, var(--shadow-ink) 30%, transparent);
+  --shadow-e2:
+    0 calc(1px * var(--shadow-scale)) calc(3px * var(--shadow-scale))
+      color-mix(in oklab, var(--shadow-ink) 18%, transparent),
+    0 calc(12px * var(--shadow-scale)) calc(44px * var(--shadow-scale))
+      color-mix(in oklab, var(--shadow-ink) 22%, transparent);
+  --shadow-lift:
+    0 calc(4px * var(--shadow-scale)) calc(14px * var(--shadow-scale))
+      color-mix(in oklab, var(--shadow-ink) 22%, transparent),
+    0 calc(18px * var(--shadow-scale)) calc(56px * var(--shadow-scale))
+      color-mix(in oklab, var(--shadow-ink) 28%, transparent);
+  --shadow-e3:
+    0 calc(8px * var(--shadow-scale)) calc(28px * var(--shadow-scale))
+      color-mix(in oklab, var(--shadow-ink) 26%, transparent),
+    0 calc(30px * var(--shadow-scale)) calc(84px * var(--shadow-scale))
+      color-mix(in oklab, var(--shadow-ink) 34%, transparent);
+  --shadow-plate:
+    0 1px 0 color-mix(in oklab, oklch(0 0 0) 30%, transparent),
+    0 calc(2.5px * var(--shadow-scale)) calc(5px * var(--shadow-scale))
+      color-mix(in oklab, var(--shadow-ink) 30%, transparent);
+  /* The ring does not fade up here: the hairline is light, not ink, and light
+     at the foot of a card is exactly where the page is darkest behind it. */
+  --surface-ring-top: var(--hairline);
+  --surface-ring-mid: var(--hairline);
+  --surface-ring-foot: var(--hairline);
+  --lit-edge: color-mix(in oklab, white 13%, transparent);
+  --lit-edge-mid: color-mix(in oklab, white 5%, transparent);
+  /* Opaque in dark. The plate is already brighter than the ground around it,
+     and a see-through one would lose the only thing it has. */
+  --float-face: var(--popover);
+  --float-filter: none;
+}
+
+/* ═══ THE CONTROL LADDER, AS UTILITIES ═════════════════════════════════════
+   The segmented control names its corners and its type by rung
+   (`rounded-control-sm`, `text-control`), so the rungs are theme values and not
+   arbitrary ones. `--radius-control-sm` restates the `:root` value exactly;
+   the unlayered one wins and they cannot disagree. */
+@theme {
+  --radius-control-xs: calc(10px * var(--round-scale)); /* h-7 */
+  --radius-control-sm: calc(12px * var(--round-scale)); /* h-9 */
+  --radius-control: calc(14px * var(--round-scale));    /* h-11 */
+  --radius-control-lg: calc(16px * var(--round-scale)); /* h-13 */
+  --text-caption: 0.734375rem; /* 11.75px */
+  --text-caption--line-height: 1.4;
+  --text-control: 0.796875rem; /* 12.75px */
+  --text-control--line-height: 1.4;
+  --text-body: 0.9375rem; /* 15px */
+  --text-body--line-height: 1.45;
+  --text-lead: 1.0625rem; /* 17px */
+  --text-lead--line-height: 1.5;
+}
+
 @theme inline {
-    --font-heading: var(--font-sans);
-    --font-sans: 'Geist Variable', sans-serif;
-    --color-sidebar-ring: var(--sidebar-ring);
-    --color-sidebar-border: var(--sidebar-border);
-    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-    --color-sidebar-accent: var(--sidebar-accent);
-    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-    --color-sidebar-primary: var(--sidebar-primary);
-    --color-sidebar-foreground: var(--sidebar-foreground);
-    --color-sidebar: var(--sidebar);
-    --color-chart-5: var(--chart-5);
-    --color-chart-4: var(--chart-4);
-    --color-chart-3: var(--chart-3);
-    --color-chart-2: var(--chart-2);
-    --color-chart-1: var(--chart-1);
-    --color-ring: var(--ring);
-    --color-input: var(--input);
-    --color-border: var(--border);
-    --color-destructive: var(--destructive);
-    --color-accent-foreground: var(--accent-foreground);
-    --color-accent: var(--accent);
-    --color-muted-foreground: var(--muted-foreground);
-    --color-muted: var(--muted);
-    --color-secondary-foreground: var(--secondary-foreground);
-    --color-secondary: var(--secondary);
-    --color-primary-foreground: var(--primary-foreground);
-    --color-primary: var(--primary);
-    --color-popover-foreground: var(--popover-foreground);
-    --color-popover: var(--popover);
-    --color-card-foreground: var(--card-foreground);
-    --color-card: var(--card);
-    --color-foreground: var(--foreground);
-    --color-background: var(--background);
-    --radius-sm: calc(var(--radius) * 0.6);
-    --radius-md: calc(var(--radius) * 0.8);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) * 1.4);
-    --radius-2xl: calc(var(--radius) * 1.8);
-    --radius-3xl: calc(var(--radius) * 2.2);
-    --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 }
 
-:root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+* { border-color: var(--border); }
+html { font-family: Figtree, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+body { margin: 0; background: var(--background); color: var(--foreground); }
+button, input { font: inherit; }
+
+/* ═══ THE SHELL ════════════════════════════════════════════════════════════
+   The reference's own rules, by its class names, so a fix in one is a
+   copy into the other and not a translation. */
+.app-shell { position: relative; height: 100svh; min-height: 560px; overflow: hidden; --sidebar-width: 306px; }
+.sidebar-brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.brand-mark { position: relative; width: 32px; height: 32px; flex: none; overflow: hidden; border: 1px solid var(--hairline); border-radius: var(--radius-box); background: var(--card-face); box-shadow: var(--shadow-e1), var(--hl-top); pointer-events: none; }
+.brand-copy { flex: 1; min-width: 0; }
+.sidebar-brand strong { display: block; font-family: "Plus Jakarta Sans", Figtree, sans-serif; font-size: 15px; font-weight: 700; letter-spacing: -0.035em; }
+.sidebar-brand small { display: block; color: var(--muted-foreground); font-size: 11px; margin-top: 1px; }
+.brand-actions { display: flex; flex: none; align-items: center; gap: 2px; margin-right: -4px; }
+.brand-actions [data-slot="button"] { color: var(--muted-foreground); }
+/* The header's two and the preset's reset are one kind of button: 28px with a
+   16px glyph, big enough to hit and still lighter than the controls they sit by. */
+.controls .brand-actions [data-slot="button"], .controls .group-title-action [data-slot="button"] { width: 28px; height: 28px; }
+.mobile-controls-button { display: none; }
+/* FULL SCREEN: with the sidebar shut the scene is the whole window, and one
+   floating button brings the column back. */
+.app-shell[data-sidebar="closed"] { --sidebar-width: 0px; }
+.sidebar-open-button { position: absolute; z-index: 5; top: 18px; left: 18px; }
+/* DOCKED, not floating: the controls are the page's own column, so they meet
+   the window's edges and stand beside the scene instead of over it. */
+.control-sidebar { position: absolute; z-index: 10; left: 0; top: 0; bottom: 0; width: 306px; overflow-y: auto; border-right: 1px solid var(--hairline); background: var(--sidebar); scrollbar-color: var(--border) transparent; scrollbar-width: thin; }
+.controls { padding: 25px 23px 30px; display: flex; flex-direction: column; gap: 21px; }
+.controls-intro p { margin: 0; font-size: 12px; line-height: 1.55; color: var(--muted-foreground); }
+.preset-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.preset-row [data-slot="select-trigger"] { flex: 1 1 50%; width: 0; min-width: 0; }
+/* Half and half: with a label the copy button is as wide as the menu anyway,
+   and two equal halves read as one row instead of a field and a leftover. */
+/* A 50% BASIS, not 0: a zero basis is floored at each box's own padding, and
+   the button's is wider than the menu's, so "equal" came out 4px apart. */
+.preset-row > button { flex: 1 1 50%; min-width: 0; }
+.controls [data-slot="button"], .controls [data-slot="select-trigger"], .mobile-controls-button { border-radius: var(--radius-control-sm); font-size: 12.75px; }
+.controls [data-slot="button"][data-size="sm"] { height: 36px; }
+.controls [data-slot="button"][data-size="icon"] { width: 36px; height: 36px; }
+.controls [data-slot="select-trigger"] { height: 36px; background: var(--card); }
+.controls [data-slot="separator"] { background: var(--hairline); }
+.control-group { display: flex; flex-direction: column; gap: 17px; }
+.group-title { display: flex; align-items: baseline; justify-content: space-between; font-family: "Plus Jakarta Sans", Figtree, sans-serif; font-size: 13px; font-weight: 700; letter-spacing: -0.025em; }
+.group-title-action { align-items: center; min-height: 28px; margin-block: -2px; }
+.group-title-action [data-slot="button"] { margin-right: -4px; color: var(--muted-foreground); }
+.slider-row { display: flex; flex-direction: column; gap: 11px; }
+.control-line, .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.control-line label, .switch-row label { font-size: 12.75px; font-weight: 500; }
+.control-value { color: var(--muted-foreground); font-family: Figtree, sans-serif; font-size: 11px; font-variant-numeric: tabular-nums; }
+.switch-row p { color: var(--muted-foreground); font-size: 11px; line-height: 1.35; margin: 3px 0 0; }
+.switch-row button { flex: none; }
+.viewport-credit { position: absolute; z-index: 4; right: 24px; bottom: 18px; display: flex; align-items: baseline; gap: 7px; color: var(--muted-foreground); font-size: 11px; line-height: 1.4; text-shadow: 0 1px 2px var(--background), 0 -1px 2px var(--background); }
+.viewport-credit a { display: inline-flex; align-items: center; color: inherit; text-decoration: none; }
+.viewport-credit a:hover { color: var(--foreground); }
+.viewport-credit a:first-child:hover { text-decoration: underline; }
+.viewport-credit a:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; border-radius: 2px; }
+
+.sidebar-open-button, .mobile-controls-button, [data-slot="select-content"] {
+  border: 1px solid var(--hairline);
+  background: var(--float-face);
+  -webkit-backdrop-filter: var(--float-filter);
+  backdrop-filter: var(--float-filter);
+  box-shadow: var(--shadow-e3), var(--hl-top);
+}
+/* The pills are small and sit low over the scene: at e3 a 40px pill wears a
+   shadow three times its own height. */
+.sidebar-open-button, .mobile-controls-button { box-shadow: var(--shadow-e2), var(--hl-top); }
+[data-slot="select-content"] { border-radius: var(--radius-card); }
+
+
+@media (max-width: 900px) {
+  .control-sidebar { width: 290px; }
+  .app-shell { --sidebar-width: 290px; }
+}
+@media (max-width: 768px) {
+  .app-shell { height: 100svh; min-height: 480px; --sidebar-width: 0px; }
+  .mobile-controls-button { position: absolute; z-index: 5; top: 16px; left: 16px; display: inline-flex; }
+  .control-sidebar, .sidebar-open-button { display: none; }
+  .viewport-credit { right: 16px; bottom: 14px; }
+}
+@media (max-width: 420px) {
+  .sidebar-brand strong { font-size: 13px; }
 }
 
-.dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
-}
+/* The slider ring stays inside the 22px recessed track. */
+.house-slider { position: relative; display: block; width: 100%; height: 22px; --slider-pull-x: 0px; }
+.house-slider-track { position: absolute; inset: 0; border: 1px solid var(--hairline); border-radius: 999px; background: color-mix(in oklab, var(--muted) 55%, transparent); }
+.house-slider-fill { position: absolute; top: 0; bottom: 0; left: 0; width: calc(11px + var(--slider-progress) * (100% - 22px) + 9px); border-radius: 999px; background: var(--track-fill); pointer-events: none; }
+.house-slider input { position: absolute; top: 0; bottom: 0; left: 2px; width: calc(100% - 4px); height: 100%; margin: 0; padding: 0; border: 0; background: transparent; appearance: none; -webkit-appearance: none; cursor: pointer; touch-action: none; }
+.house-slider input::-webkit-slider-runnable-track { height: 100%; background: transparent; }
+.house-slider input::-moz-range-track { height: 100%; background: transparent; }
+.house-slider input::-webkit-slider-thumb { box-sizing: border-box; width: 18px; height: 18px; margin-top: 2px; border: 3px solid var(--thumb-ring); border-radius: 50%; background: color-mix(in oklab, var(--card) 40%, transparent); box-shadow: var(--thumb-shadow); backdrop-filter: blur(2px) saturate(1.08); -webkit-backdrop-filter: blur(2px) saturate(1.08); appearance: none; -webkit-appearance: none; transform: translateX(var(--slider-pull-x)); transition: transform 80ms cubic-bezier(0.22, 1, 0.36, 1); }
+.house-slider input::-moz-range-thumb { box-sizing: border-box; width: 18px; height: 18px; border: 3px solid var(--thumb-ring); border-radius: 50%; background: color-mix(in oklab, var(--card) 40%, transparent); box-shadow: var(--thumb-shadow); backdrop-filter: blur(2px) saturate(1.08); transform: translateX(var(--slider-pull-x)); transition: transform 80ms cubic-bezier(0.22, 1, 0.36, 1); }
+.house-slider input:focus-visible { outline: 2px solid color-mix(in oklab, var(--ring) 55%, transparent); outline-offset: 3px; border-radius: 999px; }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-    }
-  body {
-    @apply bg-background text-foreground;
-    }
-  html {
-    @apply font-sans;
-    }
-}
+/* ═══ WHAT IS THIS DEMO'S OWN ═══════════════════════════════════════════════
+   Below this line nothing is shared: the room the picture hangs in, the strip
+   of photographs, and the sheet a phone gets instead of the column. Each one
+   is drawn from the tokens above and invents none of its own. */
 
-/**
- * ═══════════════════════════════════════════════════════════════════════════
- *  THE PANEL'S OWN PAPER, WHICH IS NOT THE PAGE'S AND NOT A CARD'S.
- * ═══════════════════════════════════════════════════════════════════════════
- *
- * The controls stood on `--background`, the same surface the effect is drawn
- * over, so the only thing dividing a column of sliders from a photograph with
- * a hole in it was one hairline. It needed a shade of its own.
- *
- * NOT `--card`, WHICH IS WHITE IN LIGHT. In dark it is 0.205 against the
- * page's 0.145 and would have worked; in light both are pure white and the
- * panel would have kept exactly the problem it was meant to solve. A surface
- * that only separates in one theme is not a surface.
- *
- * AND NOT `--muted`, which is what a slider's track is made of. A panel
- * painted in the same token as the tracks lying on it is a panel with no
- * tracks: the one place these numbers are read would be the one place the
- * controls disappeared.
- *
- * So: a step lighter than the page in dark, a step darker than white in
- * light, and clear of both `--muted` values in either direction so everything
- * standing on it still reads.
- */
-:root {
-  --panel: oklch(0.958 0 0);
+/* THE SCENE STARTS WHERE THE COLUMN ENDS. The reference lets its field run
+   under the sidebar, which costs it nothing: dots hidden behind a column are
+   dots nobody misses. A photograph is centred and cropped to its box, so here
+   the box is the part of the window you can see, and the lens measures itself
+   every frame, so a column opening or shutting is only a different box. */
+.stage { position: absolute; top: 0; right: 0; bottom: 0; left: var(--sidebar-width); overflow: hidden; background: var(--background); }
+/* A dot ground, and a STILL one: everything else here moves, and a ground
+   that held still is what makes the shape read as moving over something.
+   One gradient and no canvas, because it sits under a full-screen shader and
+   must cost nothing. 22px is the reference's own spacing. */
+.stage-ground { position: absolute; inset: 0; background-image: radial-gradient(color-mix(in oklab, var(--foreground) 22%, transparent) 1px, transparent 1px); background-size: 22px 22px; }
+.stage-lens { position: absolute; inset: 0; }
+
+/* THE PHOTOGRAPHS AS PHOTOGRAPHS: a strip that snaps, so a card is never
+   half cut at rest, with the scrollbar hidden and the swipe kept. It starts
+   on the column's margin like every other row in it. */
+.photo-strip { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 2px; scrollbar-width: none; }
+.photo-strip::-webkit-scrollbar { display: none; }
+.photo-card { flex: none; width: 104px; padding: 0; border: 0; background: none; color: inherit; text-align: left; cursor: pointer; scroll-snap-align: start; border-radius: var(--radius-plate); opacity: 0.6; transition: opacity 160ms ease; }
+.photo-card:hover, .photo-card[aria-pressed="true"] { opacity: 1; }
+.photo-card:focus-visible { outline: 2px solid color-mix(in oklab, var(--ring) 55%, transparent); outline-offset: -2px; }
+/* THE MARK OF THE CHOSEN ONE IS ON THE FRAME, inset, in the selection's ink:
+   an outset ring inside a scroller is clipped top and bottom. */
+/* The ring is an overlay, so it is drawn over the picture and not under it. */
+.photo-frame { position: relative; display: block; aspect-ratio: 8 / 5; overflow: hidden; border-radius: var(--radius-plate); background: var(--well); }
+.photo-frame::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--hairline); pointer-events: none; }
+.photo-card[aria-pressed="true"] .photo-frame::after { box-shadow: inset 0 0 0 2px var(--foreground); }
+.photo-frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.photo-label { display: block; margin-top: 6px; overflow: hidden; color: var(--muted-foreground); font-size: 11px; white-space: nowrap; text-overflow: ellipsis; }
+.photo-card[aria-pressed="true"] .photo-label { color: var(--foreground); }
+.controls [data-slot="input"] { height: 36px; border-radius: var(--radius-control-sm); background: var(--card); font-size: 12.75px; }
+.control-note { margin: -6px 0 0; min-height: 2.9em; color: var(--muted-foreground); font-size: 11px; line-height: 1.45; }
+/* DIMMED AND NOT REMOVED when the movement is off: a knob that vanished
+   would take with it the explanation of what the switch just did. */
+.is-dimmed { opacity: 0.4; }
+.control-line label[title] { cursor: help; }
+/* The credit leads with the photographer, so the author is no longer the
+   line's first link and the reference's underline rule misses it. */
+.viewport-credit .credit-author:hover { text-decoration: underline; }
+
+/* ═══ ON A PHONE, A SHEET FROM THE FOOT, AND NOT A DIALOG ══════════════════
+   The reference opens a modal side sheet here. This demo cannot: a modal
+   marks the page inert, and moving a finger over the picture is the whole
+   interaction. So it is a plain element that slides, capped at half the
+   screen so the effect is always half visible while a slider is under the
+   thumb, dressed as the reference dresses what floats: the card face, a
+   hairline, the highest cast. No scrim, nothing trapped. */
+.control-sheet { display: none; }
+@media (max-width: 768px) {
+  .control-sheet { position: fixed; z-index: 40; right: 0; bottom: 0; left: 0; display: block; max-height: 50dvh; overflow-y: auto; border-top: 1px solid var(--hairline); border-radius: var(--radius-slab) var(--radius-slab) 0 0; background: var(--card-face); box-shadow: var(--shadow-e3), var(--hl-top); transform: translateY(100%); transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1); }
+  .control-sheet[data-open="true"] { transform: translateY(var(--sheet-drag, 0px)); }
+  .control-sheet[data-dragging="true"] { transition: none; }
+  .control-sheet .controls { padding-top: 4px; }
 }
-.dark {
-  --panel: oklch(0.205 0 0);
+@media (prefers-reduced-motion: reduce) {
+  .control-sheet { transition: none; }
 }
+/* The grab bar is the sheet's one ornament and it is doing a job: with no
+   scrim there is nothing else saying where the sheet begins. */
+.sheet-grip { display: flex; width: 100%; justify-content: center; padding: 12px 0; border: 0; background: none; cursor: grab; touch-action: none; }
+.sheet-grip span { width: 36px; height: 4px; border-radius: 999px; background: var(--border); }

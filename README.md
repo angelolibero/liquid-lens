@@ -1,6 +1,6 @@
-# Liquid lens
+# Liquid Lens
 
-![The effect: one shape with a ragged coastline, the photograph drawn only inside it, out of focus at the edges](docs/preview.jpg)
+![Liquid Lens: one shape with a ragged coastline, the photograph drawn only inside it, out of focus at the edges](docs/assets/liquid-lens-cover.jpg)
 
 A photograph, and a body of liquid you move over it with the pointer. Seven
 soft bodies chase your hand; where two are near each other their fields add,
@@ -9,7 +9,7 @@ circles overlapping. That merging is the whole of why it reads as liquid and
 not as a string of discs. Inside the shape the picture is drawn, out of focus
 at the edge and sharp deep in; outside it there is nothing.
 
-**[See it running](https://angelolibero.github.io/liquid-lens/)** — every
+**[See it running](https://angelolibero.github.io/liquid-lens/)**: every
 number it has is a slider, because an effect shown at one tuning is a
 screenshot that happens to move.
 
@@ -33,7 +33,9 @@ import { LiquidLens } from "./liquid-lens/LiquidLens";
 ```
 
 That is the whole API. `values` takes any of the knobs below and falls back to
-the defaults for the rest; `paper` is the colour `Room light` mixes toward.
+the defaults for the rest; `paper` is the colour `Room light` mixes toward;
+`follow={false}` stops it chasing the pointer and leaves it drifting, which is
+what a lens much smaller than the window wants (the demo's logo is one).
 
 Copy `src/liquid-lens/` into your project: five files with no dependency
 beyond React. The component, the shader, the table of knobs, the presets, and
@@ -122,14 +124,15 @@ can steer.
 ## Photographs
 
 None are committed. The demo hotlinks Unsplash's CDN, which sends
-`access-control-allow-origin: *` — the header a WebGL texture needs to be
+`access-control-allow-origin: *`, the header a WebGL texture needs to be
 readable at all. Paste any image URL from a host that does the same. If it
 draws nothing, that header is why.
 
 Photographs in the demo by Kalen Emsley, Sergey Pesterev, Casey Horner,
-Pedro Lastra and Ayo Ogunseinde, on Unsplash. The image at the top of this
-file is the shader's own output over Kalen Emsley's photograph, not a mockup:
-it was rendered by the same fragment shader this repository ships.
+Pedro Lastra and Ayo Ogunseinde, on Unsplash. The cover at the top of this
+file is not a mockup: it is `cover.html`, a page that draws the real
+component over Kalen Emsley's photograph, captured at twice its size. Run
+`npm run dev`, open `/liquid-lens/cover.html`, and it is there.
 
 ## Running it
 
@@ -139,7 +142,12 @@ npm run dev
 ```
 
 React, Vite, Tailwind and a few shadcn/ui components for the panel, on the
-Radix primitives. The effect itself is plain WebGL and knows about none of
-them: `src/liquid-lens/` is five files you can copy into anything.
+Radix primitives, with Hugeicons. The panel and its shell are the same as
+[Surface Field](https://github.com/angelolibero/surface-field)'s demo, so the
+two read as one family; `docs/DEMO_KIT.md` says what is shared. The effect
+itself is plain WebGL and knows about none of them: `src/liquid-lens/` is five
+files you can copy into anything.
 
-MIT.
+## License
+
+MIT. See [LICENSE](LICENSE). Made by [Angelo Libero](https://github.com/angelolibero).
