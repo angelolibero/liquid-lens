@@ -231,6 +231,13 @@ export const LiquidLens = React.forwardRef<LiquidLensHandle, LiquidLensProps>(fu
     const target = { x: box.width / 2, y: box.height / 2 };
     let drifting = true;
     let idle: ReturnType<typeof setTimeout> | null = null;
+    /* WHERE THE HAND LEFT IT, and how far the hand-over to the path has got.
+       The path keeps running while a pointer leads, so when the drift takes
+       over again the path is somewhere else entirely, and handing it the
+       target at once made the shape leap across the box. Instead the target
+       leaves the hand's last point and eases onto the moving path. */
+    const held = { x: 0, y: 0 };
+    let handoff = 1;
 
     const onMove = (event: PointerEvent) => {
       if (event.pointerType === "touch" || !followRef.current) return;
@@ -239,7 +246,12 @@ export const LiquidLens = React.forwardRef<LiquidLensHandle, LiquidLensProps>(fu
       target.y = event.clientY - box.top;
       drifting = false;
       if (idle) clearTimeout(idle);
-      idle = setTimeout(() => (drifting = true), 2600);
+      idle = setTimeout(() => {
+        drifting = true;
+        held.x = target.x;
+        held.y = target.y;
+        handoff = 0;
+      }, 2600);
     };
     window.addEventListener("pointermove", onMove, { passive: true });
 
@@ -350,9 +362,15 @@ export const LiquidLens = React.forwardRef<LiquidLensHandle, LiquidLensProps>(fu
            is then only ever where the pointer put it. */
         const reach = knob("drift");
         const speed = knob("driftSpeed");
-        target.x = box.width * (0.5 + reach * Math.sin(clock * 0.21 * speed + phase));
-        target.y =
-          box.height * (0.5 + reach * 0.85 * Math.sin(clock * 0.34 * speed + phase * 1.7));
+        const pathX = box.width * (0.5 + reach * Math.sin(clock * 0.21 * speed + phase));
+        const pathY = box.height * (0.5 + reach * 0.85 * Math.sin(clock * 0.34 * speed + phase * 1.7));
+        /* 2.5 s AND EASED AT BOTH ENDS: long enough to read as the liquid
+           deciding to wander off, not as being yanked, and on real time, so
+           a stopped clock still finishes the hand-over. */
+        handoff = Math.min(1, handoff + dt / 2.5);
+        const ease = handoff * handoff * (3 - 2 * handoff);
+        target.x = held.x + (pathX - held.x) * ease;
+        target.y = held.y + (pathY - held.y) * ease;
       }
 
       /* The light's radius: a fraction of the shorter side, breathing. */
